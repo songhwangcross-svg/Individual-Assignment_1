@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>API 연동 실습 | 가계부</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../style.css">
+  <style>
+    .card h2 { margin-top: 0; font-size: 19px; }
+    .status { display: flex; align-items: center; gap: 8px; font-size: 14px; flex-wrap: wrap; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--muted); }
+    .dot.ok { background: var(--income); }
+    .dot.fail { background: var(--expense); }
+    code { background: var(--bg); padding: 1px 6px; border-radius: 4px; font-size: 13px; word-break: break-all; }
+    form { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; align-items: end; }
+    label { display: flex; flex-direction: column; font-size: 13px; color: var(--muted); gap: 4px; }
+    input, select {
+      font: inherit; padding: 8px 10px; border-radius: 8px;
+      border: 1px solid var(--line); background: var(--bg); color: var(--text); min-width: 0;
+    }
+    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .stat { background: var(--bg); border-radius: 10px; padding: 12px; }
+    .stat .label { font-size: 13px; color: var(--muted); }
+    .stat .value { font-size: 20px; font-weight: 700; }
+    .income { color: var(--income); }
+    .expense { color: var(--expense); }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+    th { color: var(--muted); font-weight: 600; }
+    td.num { text-align: right; font-variant-numeric: tabular-nums; }
+    button.small { padding: 4px 10px; font-size: 13px; }
+    #log { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12.5px; background: var(--bg);
+           border-radius: 10px; padding: 12px; margin: 0; max-height: 220px; overflow: auto; white-space: pre-wrap; }
+    .msg { font-size: 14px; min-height: 1.4em; margin: 10px 0 0; }
+    @media (max-width: 560px) { .stats { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <span class="brand">송수원</span>
+    <nav>
+      <a href="../intro/">소개</a>
+      <a href="./" class="active">API 연동 실습</a>
+      <button id="theme-btn">다크모드</button>
+    </nav>
+  </header>
+
+  <main>
+    <!-- 1. 연결 상태: 어떤 백엔드를 부르는지, 살아 있는지 -->
+    <section class="card">
+      <h2>💰 가계부 — 프론트엔드·백엔드 연동 실습</h2>
+      <p class="muted" style="margin-top:0">
+        이 화면은 Render에 배포한 FastAPI 가계부 API(3주차 실습)를 <code>fetch</code>로 호출하고 결과를 보여 줍니다.
+      </p>
+      <div class="status">
+        <span class="dot" id="dot"></span>
+        <span id="status-text">백엔드 연결 확인 중…</span>
+      </div>
+      <p class="status muted" style="margin:8px 0 0">
+        API 주소: <code id="api-url"></code>
+        · <a id="docs-link" target="_blank" rel="noopener">Swagger UI(/docs) 열기</a>
+      </p>
+    </section>
+
+    <!-- 2. 거래 등록 폼 → POST /transactions -->
+    <section class="card">
+      <h2>거래 등록 <span class="muted" style="font-size:14px;font-weight:400">POST /transactions</span></h2>
+      <form id="tx-form">
+        <label>구분
+          <select name="type">
+            <option value="expense">지출</option>
+            <option value="income">수입</option>
+          </select>
+        </label>
+        <label>금액(원)
+          <input name="amount" type="number" min="1" step="1" placeholder="12000" required>
+        </label>
+        <label>카테고리
+          <input name="category" maxlength="50" placeholder="식비" required>
+        </label>
+        <label>메모(선택)
+          <input name="description" maxlength="200" placeholder="점심">
+        </label>
+        <label>날짜
+          <input name="occurred_on" type="date" required>
+        </label>
+        <button class="primary" type="submit">등록</button>
+      </form>
+      <p class="msg" id="form-msg"></p>
+    </section>
+
+    <!-- 3. 합계 + 목록 → GET /transactions, DELETE /transactions/{id} -->
+    <section class="card">
+      <h2>거래 목록 <span class="muted" style="font-size:14px;font-weight:400">GET /transactions</span></h2>
+      <div class="stats">
+        <div class="stat"><div class="label">수입 합계</div><div class="value income" id="sum-income">0원</div></div>
+        <div class="stat"><div class="label">지출 합계</div><div class="value expense" id="sum-expense">0원</div></div>
+        <div class="stat"><div class="label">잔액</div><div class="value" id="sum-balance">0원</div></div>
+      </div>
+      <div class="table-wrap" style="margin-top:12px">
+        <table>
+          <thead><tr><th>ID</th><th>날짜</th><th>구분</th><th>카테고리</th><th>메모</th><th style="text-align:right">금액</th><th></th></tr></thead>
+          <tbody id="tx-body"><tr><td colspan="7" class="muted">불러오는 중…</td></tr></tbody>
+        </table>
+      </div>
+      <p style="margin:12px 0 0"><button id="reload-btn">목록 새로고침</button></p>
+    </section>
+
+    <!-- 4. 요청·응답 로그: 화면 → 요청 → 서버 → 응답 흐름을 눈으로 확인 -->
+    <section class="card">
+      <h2>요청·응답 로그</h2>
+      <pre id="log"></pre>
+    </section>
+  </main>
+
+  <footer>© 2026 송수원 · <a href="../intro/">개인 소개 페이지로 돌아가기</a></footer>
+
+  <script src="../theme.js"></script>
+  <script>
+    // ── 백엔드 API 주소 ──────────────────────────────────────────
+    // 배포 후 Render 주소로 바꾼다(끝에 / 없이).
+    const RENDER_API_URL = "https://YOUR-SERVICE.onrender.com";
+    // 내 컴퓨터에서 열었을 때(localhost)는 로컬 백엔드(fastapi dev)를 부른다.
+    const isLocal = ["localhost", "127.0.0.1"].includes(location.hostname);
+    const API_URL = isLocal ? "http://127.0.0.1:8000" : RENDER_API_URL;
+
+    const $ = (id) => document.getElementById(id);
+    $("api-url").textContent = API_URL;
+    $("docs-link").href = API_URL + "/docs";
+    // 오늘 날짜(한국 시간 기준)를 날짜 칸의 기본값으로
+    const today = () => {
+      const d = new Date();
+      return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+    };
+    document.querySelector('input[name="occurred_on"]').value = today();
+
+    const won = (n) => Math.round(n).toLocaleString("ko-KR") + "원";
+
+    function log(line) {
+      const t = new Date().toLocaleTimeString("ko-KR");
+      $("log").textContent = `[${t}] ${line}\n` + $("log").textContent;
+    }
+
+    // 모든 API 호출이 지나가는 공통 함수: 요청·응답을 로그에 남긴다
+    async function api(method, path, body) {
+      const opts = { method, headers: {} };
+      if (body) {
+        opts.headers["Content-Type"] = "application/json";
+        opts.body = JSON.stringify(body);           // JS 객체 → JSON 문자열
+      }
+      log(`→ ${method} ${path}${body ? " " + JSON.stringify(body) : ""}`);
+      const res = await fetch(API_URL + path, opts);
+      const data = res.status === 204 ? null : await res.json();   // JSON → JS 객체
+      log(`← ${res.status} ${data === null ? "(본문 없음)" : JSON.stringify(data)}`);
+      if (!res.ok) {
+        const detail = Array.isArray(data?.detail)
+          ? data.detail.map((d) => d.msg).join(", ")
+          : data?.detail;
+        throw new Error(`${res.status} ${detail || "요청 실패"}`);
+      }
+      return data;
+    }
+
+    // ① 서버 상태 확인: GET /health (무료 플랜은 첫 호출이 30~60초 걸릴 수 있다)
+    async function checkHealth() {
+      const slow = setTimeout(() => {
+        $("status-text").textContent = "서버를 깨우는 중입니다… (Render 무료 플랜은 첫 접속에 최대 1분 걸립니다)";
+      }, 3000);
+      try {
+        await api("GET", "/health");
+        $("dot").className = "dot ok";
+        $("status-text").textContent = "백엔드 연결됨 (GET /health → 200 OK)";
+        return true;
+      } catch (e) {
+        $("dot").className = "dot fail";
+        $("status-text").textContent = "백엔드에 연결하지 못했습니다: " + e.message;
+        return false;
+      } finally {
+        clearTimeout(slow);
+      }
+    }
+
+    // ② 목록 조회: GET /transactions (limit 최대치까지)
+    async function loadTransactions() {
+      try {
+        const rows = await api("GET", "/transactions?skip=0&limit=100");
+        renderTable(rows);
+      } catch (e) {
+        $("tx-body").innerHTML = "";
+        const tr = document.createElement("tr");
+        const td = document.createElement("td");
+        td.colSpan = 7; td.className = "muted"; td.textContent = "목록을 불러오지 못했습니다: " + e.message;
+        tr.appendChild(td); $("tx-body").appendChild(tr);
+      }
+    }
+
+    function renderTable(rows) {
+      const body = $("tx-body");
+      body.innerHTML = "";
+      let income = 0, expense = 0;
+      if (rows.length === 0) {
+        body.innerHTML = '<tr><td colspan="7" class="muted">아직 거래가 없습니다. 위에서 등록해 보세요.</td></tr>';
+      }
+      for (const r of rows) {
+        if (r.type === "income") income += r.amount; else expense += r.amount;
+        const tr = document.createElement("tr");
+        const cells = [
+          r.id, r.occurred_on, r.type === "income" ? "수입" : "지출",
+          r.category, r.description || "-",
+        ];
+        for (const c of cells) {
+          const td = document.createElement("td"); td.textContent = c; tr.appendChild(td);
+        }
+        const amt = document.createElement("td");
+        amt.className = "num " + r.type;
+        amt.textContent = (r.type === "income" ? "+" : "-") + won(r.amount);
+        tr.appendChild(amt);
+        const act = document.createElement("td");
+        const btn = document.createElement("button");
+        btn.className = "small"; btn.textContent = "삭제";
+        btn.addEventListener("click", () => deleteTransaction(r.id));
+        act.appendChild(btn); tr.appendChild(act);
+        body.appendChild(tr);
+      }
+      $("sum-income").textContent = won(income);
+      $("sum-expense").textContent = won(expense);
+      $("sum-balance").textContent = won(income - expense);
+    }
+
+    // ③ 등록: POST /transactions → 성공하면 목록을 서버에서 다시 받아 온다
+    $("tx-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const f = new FormData(e.target);
+      const payload = {
+        type: f.get("type"),
+        amount: Number(f.get("amount")),
+        category: f.get("category").trim(),
+        description: f.get("description").trim() || null,
+        occurred_on: f.get("occurred_on"),
+      };
+      try {
+        const created = await api("POST", "/transactions", payload);
+        $("form-msg").textContent = `✅ ${created.id}번 거래가 등록되었습니다 (201 Created)`;
+        e.target.reset();
+        document.querySelector('input[name="occurred_on"]').value = today();
+        loadTransactions();
+      } catch (err) {
+        $("form-msg").textContent = "⚠️ 등록 실패: " + err.message;
+      }
+    });
+
+    // ④ 삭제: DELETE /transactions/{id}
+    async function deleteTransaction(id) {
+      try {
+        await api("DELETE", `/transactions/${id}`);
+        $("form-msg").textContent = `🗑️ ${id}번 거래를 삭제했습니다 (204 No Content)`;
+        loadTransactions();
+      } catch (err) {
+        $("form-msg").textContent = "⚠️ 삭제 실패: " + err.message;
+      }
+    }
+
+    $("reload-btn").addEventListener("click", loadTransactions);
+
+    // 페이지가 열리면: 서버 상태 확인 → 목록 불러오기
+    checkHealth().then((ok) => {
+      if (ok) loadTransactions();
+      else $("tx-body").innerHTML = '<tr><td colspan="7" class="muted">백엔드에 연결되면 목록이 표시됩니다.</td></tr>';
+    });
+  </script>
+</body>
+</html>

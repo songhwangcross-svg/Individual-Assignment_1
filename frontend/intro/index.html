@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>송수원을 소개합니다</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../style.css">
+  <style>
+    .hero { display: flex; gap: 24px; align-items: center; flex-wrap: wrap; }
+    .avatar {
+      width: 96px; height: 96px; border-radius: 50%;
+      display: grid; place-items: center; flex-shrink: 0;
+      background: var(--accent); color: #fff; font-size: 36px; font-weight: 700;
+    }
+    body.dark .avatar { color: #12161c; }
+    .hero h1 { margin: 0 0 4px; font-size: 30px; }
+    .role { margin: 0; color: var(--accent); font-weight: 600; }
+    .cta { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+    .cta a {
+      text-decoration: none; padding: 10px 16px; border-radius: 8px;
+      border: 1px solid var(--line); background: var(--card);
+    }
+    .cta a.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+    body.dark .cta a.primary { color: #12161c; }
+    .card h2 { margin-top: 0; font-size: 19px; }
+    ul.plain { padding-left: 18px; margin: 0; }
+    .flow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 14px; }
+    .flow span.box { padding: 6px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <span class="brand">송수원</span>
+    <nav>
+      <a href="./" class="active">소개</a>
+      <a href="../expense/">API 연동 실습</a>
+      <button id="theme-btn">다크모드</button>
+    </nav>
+  </header>
+
+  <main>
+    <!-- 1. 자기소개 카드 -->
+    <section class="card hero">
+      <div class="avatar" aria-hidden="true">송</div>
+      <div>
+        <h1>송수원을 소개합니다</h1>
+        <p class="role">KAIST 디지털금융 MBA (Professional MBA)</p>
+        <p class="muted" style="margin:4px 0 0">
+          국가 연구관리 공공기관에서 연구개발과제 기획·평가·관리 업무를 맡고 있습니다.
+        </p>
+        <div class="cta">
+          <a class="primary" href="../expense/">API 연동 실습 보기 →</a>
+          <a href="https://github.com/songhwangcross-svg" target="_blank" rel="noopener">GitHub 프로필</a>
+        </div>
+      </div>
+    </section>
+
+    <div class="grid">
+      <!-- 2. 관심 분야 -->
+      <section class="card">
+        <h2>관심 분야</h2>
+        <p>
+          <span class="tag">데이터 기반 의사결정</span>
+          <span class="tag">재무제표 분석</span>
+          <span class="tag">투자 전략</span>
+        </p>
+        <p class="muted">숫자와 데이터를 근거로 판단하는 방식에 관심이 많습니다.
+          재무제표를 읽고 기업을 이해하는 공부를 꾸준히 하고 있습니다.</p>
+      </section>
+
+      <!-- 3. 이 과목에서 배우는 것 -->
+      <section class="card">
+        <h2>클라우드컴퓨팅실습에서 배우는 것</h2>
+        <ul class="plain">
+          <li>1주차: HTML·CSS·JavaScript, Git·GitHub</li>
+          <li>2주차: React·FastAPI·DB 풀스택, Vercel·Render 배포</li>
+          <li>3주차: FastAPI 백엔드(CRUD·Pydantic 검증·오류 처리)</li>
+          <li>이후: 데이터베이스, 크롤링, 공공 Open API, 검색</li>
+        </ul>
+      </section>
+    </div>
+
+    <!-- 4. 이 사이트의 구성 -->
+    <section class="card">
+      <h2>이 사이트는 이렇게 동작합니다</h2>
+      <div class="flow">
+        <span class="box">브라우저</span> →
+        <span class="box">프론트엔드 (Vercel)</span> → fetch →
+        <span class="box">FastAPI 백엔드 (Render)</span> → JSON 응답
+      </div>
+      <p class="muted" style="margin-bottom:0">
+        이 소개 페이지와 <a href="../expense/">API 연동 실습 페이지</a>는 Vercel에 배포되어 있고,
+        실습 페이지는 Render에 배포한 3주차 가계부 API를 호출해 결과를 보여 줍니다.
+      </p>
+    </section>
+  </main>
+
+  <footer>© 2026 송수원 · KAIST 디지털금융MBA 클라우드컴퓨팅실습 개인과제</footer>
+  <script src="../theme.js"></script>
+</body>
+</html>
