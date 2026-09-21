@@ -9,7 +9,7 @@ HTML로 만든 **개인 소개 페이지**와, 3주차에 만든 **FastAPI 가�
 |---|---|
 | 개인 소개 페이지 (Vercel) | https://YOUR-PROJECT.vercel.app/intro/ |
 | API 연동 실습 페이지 (Vercel) | https://YOUR-PROJECT.vercel.app/expense/ |
-| 백엔드 Swagger UI (Render) | https://YOUR-SERVICE.onrender.com/docs |
+| 백엔드 Swagger UI (Render) | https://individual-assignment-api.onrender.com/docs |
 
 > Render 무료 플랜은 15분 동안 요청이 없으면 잠듭니다. 첫 접속에 30~60초 걸릴 수 있고, 데이터는 서버 메모리에 저장되므로 서버가 다시 시작되면 초기화됩니다.
 
