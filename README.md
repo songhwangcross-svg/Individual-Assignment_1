@@ -7,8 +7,8 @@ HTML로 만든 **개인 소개 페이지**와, 3주차에 만든 **FastAPI 가�
 
 | 구분 | 주소 |
 |---|---|
-| 개인 소개 페이지 (Vercel) | https://YOUR-PROJECT.vercel.app/intro/ |
-| API 연동 실습 페이지 (Vercel) | https://YOUR-PROJECT.vercel.app/expense/ |
+| 개인 소개 페이지 (Vercel) | https://individual-assignment-1-murex.vercel.app/intro/ |
+| API 연동 실습 페이지 (Vercel) | https://individual-assignment-1-murex.vercel.app/expense/ |
 | 백엔드 Swagger UI (Render) | https://individual-assignment-api.onrender.com/docs |
 
 > Render 무료 플랜은 15분 동안 요청이 없으면 잠듭니다. 첫 접속에 30~60초 걸릴 수 있고, 데이터는 서버 메모리에 저장되므로 서버가 다시 시작되면 초기화됩니다.
@@ -70,7 +70,7 @@ HTML로 만든 **개인 소개 페이지**와, 3주차에 만든 **FastAPI 가�
 | Root Directory | `backend` |
 | Build Command | `pip install -r requirements.txt` |
 | Start Command | `uvicorn app.main:app --host 0.0.0.0 --port $PORT` |
-| 환경변수 | `ALLOWED_ORIGINS` = Vercel 주소 (예: `https://YOUR-PROJECT.vercel.app`, 끝에 `/` 없이) |
+| 환경변수 | `ALLOWED_ORIGINS` = Vercel 주소 (예: `https://individual-assignment-1-murex.vercel.app`, 끝에 `/` 없이) |
 
 **Vercel (프론트엔드)**
 
