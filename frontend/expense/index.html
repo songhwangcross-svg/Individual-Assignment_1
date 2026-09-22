@@ -35,6 +35,12 @@
     #log { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12.5px; background: var(--bg);
            border-radius: 10px; padding: 12px; margin: 0; max-height: 220px; overflow: auto; white-space: pre-wrap; }
     .msg { font-size: 14px; min-height: 1.4em; margin: 10px 0 0; }
+    .flow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 14px; }
+    .flow .box { padding: 6px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); }
+    .steps { margin: 14px 0 0; padding: 0; list-style: none; display: grid; gap: 8px; font-size: 14px; }
+    .steps li { display: grid; grid-template-columns: 150px 1fr; gap: 8px; align-items: baseline; }
+    .steps .when { color: var(--muted); }
+    @media (max-width: 560px) { .steps li { grid-template-columns: 1fr; gap: 2px; } }
     @media (max-width: 560px) { .stats { grid-template-columns: 1fr; } }
   </style>
 </head>
@@ -63,6 +69,22 @@
         API 주소: <code id="api-url"></code>
         · <a id="docs-link" target="_blank" rel="noopener">Swagger UI(/docs) 열기</a>
       </p>
+    </section>
+
+    <!-- 1-1. 동작 흐름: 화면의 각 부분이 어떤 API를 부르는지 -->
+    <section class="card">
+      <h2>이 페이지는 이렇게 동작합니다</h2>
+      <div class="flow">
+        <span class="box">브라우저</span> →
+        <span class="box">프론트엔드 (Vercel)</span> → fetch →
+        <span class="box">FastAPI 백엔드 (Render)</span> → JSON 응답 → 화면 갱신
+      </div>
+      <ol class="steps">
+        <li><span class="when">① 페이지가 열리면</span><span><code>GET /health</code>로 서버 상태 확인 → <code>GET /transactions</code>로 목록 불러오기</span></li>
+        <li><span class="when">② 등록 버튼</span><span><code>POST /transactions</code> → 성공 시 <code>201 Created</code></span></li>
+        <li><span class="when">③ 삭제 버튼</span><span><code>DELETE /transactions/{id}</code> → 성공 시 <code>204 No Content</code></span></li>
+        <li><span class="when">④ 결과 확인</span><span>맨 아래 <b>요청·응답 로그</b>에서 실제로 주고받은 요청과 응답(상태 코드)을 확인</span></li>
+      </ol>
     </section>
 
     <!-- 2. 거래 등록 폼 → POST /transactions -->
